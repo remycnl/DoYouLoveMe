@@ -1,0 +1,18 @@
+{
+  "@vite/client": {
+    "prefetch": true,
+    "isEntry": true,
+    "file": "@vite/client",
+    "css": [],
+    "module": true,
+    "resourceType": "script"
+  },
+  "/home/remy.cnl/remy/Personnal-Projects/DoYouLoveMe/node_modules/nuxt/dist/app/entry.js": {
+    "resourceType": "script",
+    "module": true,
+    "prefetch": true,
+    "preload": true,
+    "isEntry": true,
+    "file": "/home/remy.cnl/remy/Personnal-Projects/DoYouLoveMe/node_modules/nuxt/dist/app/entry.js"
+  }
+}
