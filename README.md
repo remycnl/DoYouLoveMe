@@ -1,4 +1,4 @@
-![Website Preview](/img/LoveYouToo.gif)
+![Website Preview](https://tenor.com/fr/view/bubu-dudu-bubu-dudu-love-dudu-bubu-love-dudu-love-bubu-love-dudu-bubu-gif-388489720610011907)
 
 # Nuxt Minimal Starter
 
