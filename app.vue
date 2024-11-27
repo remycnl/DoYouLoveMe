@@ -6,8 +6,8 @@
 			<Transition name="fade">
 				<h1
 					v-if="isYesClicked"
-					class="absolute top-10 lg:top-20 text-[4rem] lg:text-[8rem] text-black text-center">
-					Ooowww, I Love You Too!
+					class="absolute top-10 lg:top-20 lg:right-60 text-[4rem] lg:text-[10rem] text-black text-left">
+					Oooww...<br>I Love You Too!
 				</h1>
 				<h1
 					v-else
@@ -21,7 +21,7 @@
 					v-if="isYesClicked"
 					:src="'/img/LoveYouToo.gif'"
 					alt="CUTE GIF"
-					class="w-full h-full absolute left-0 bottom-0" />
+					class="w-auto h-1/2 absolute left-0 bottom-0" />
 				<img
 					v-else
 					:src="'/img/DoYouLoveMe.gif'"
