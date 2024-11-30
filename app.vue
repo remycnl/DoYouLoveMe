@@ -107,11 +107,12 @@ onMounted(() => {
 		}, 5500);
 		setTimeout(() => {
 			applyElasticEffect("no-button", "elastic.out(1, 0.3)", 1.5);
-			cl;
 		}, 6000);
 	} else {
 		const noButton = document.getElementById("no-button");
+		const yesButton = document.getElementById("yes-button");
 		noButton.classList.add("transition-all", "duration-300", "ease-in-out");
+		yesButton.classList.add("transition-all", "duration-300", "ease-in-out");
 	}
 });
 </script>
@@ -158,22 +159,26 @@ onMounted(() => {
 				type="button"
 				value="YES"
 				@click="clickYesButton"
-				class="lg:scale-0 absolute left-[30%] lg:left-[40%] top-[80%] lg:top-[84%] font-mono font-bold -translate-x-1/2 -translate-y-1/2 hover:scale-110 bg-white text-black py-3 px-8 text-[2rem] rounded-full shadow-lg hover:bg-black hover:text-white cursor-pointer" />
+				class="lg:scale-0 absolute left-[30%] lg:left-[40%] top-[80%] lg:top-[84%] font-mono font-bold -translate-x-1/2 -translate-y-1/2 bg-white text-black py-3 px-8 text-[2rem] rounded-full shadow-lg hover:bg-black hover:text-white cursor-custom" />
 			<input
 				v-if="!isYesClicked"
 				id="no-button"
 				type="button"
 				value="NO"
 				@mouseover="hoverNoButton"
-				class="lg:scale-0 absolute left-[70%] lg:left-[60%] top-[80%] lg:top-[84%] font-mono font-bold bg-black -translate-x-1/2 -translate-y-1/2 text-white py-3 px-10 text-[2rem] rounded-full shadow-lg cursor-pointer" />
+				class="lg:scale-0 absolute left-[70%] lg:left-[60%] top-[80%] lg:top-[84%] font-mono font-bold bg-black -translate-x-1/2 -translate-y-1/2 text-white py-3 px-10 text-[2rem] rounded-full shadow-lg cursor-custom" />
 		</div>
 	</section>
 </template>
 
-<style scoped>
+<style>
 ::selection {
 	background: #febbcc;
 	color: #ffeecc;
+}
+
+body {
+	cursor: url("/img/cursor.png") 16 16, auto;
 }
 
 .fade-enter-active {

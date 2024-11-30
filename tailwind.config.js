@@ -10,6 +10,9 @@ export default {
           secondary: "#FFDDCC",
           third: "#FEBBCC",
       },
+      cursor: {
+        'custom': 'url(/img/cursor.png) 16 16, auto',
+      },
   },
   },
   plugins: [],
