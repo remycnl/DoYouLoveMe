@@ -152,7 +152,7 @@ onMounted(() => {
 				type="button"
 				value="YES"
 				@click="clickYesButton"
-				class="lg:scale-0 absolute left-[30%] lg:left-[40%] top-[80%] lg:top-[84%] font-mono font-bold -translate-x-1/2 -translate-y-1/2 bg-white text-black py-3 px-8 text-[2rem] rounded-full shadow-lg hover:bg-black hover:text-white cursor-custom transition-colors duration-300" />
+				class="lg:scale-0 absolute left-[30%] lg:left-[40%] top-[80%] lg:top-[84%] font-mono font-bold -translate-x-1/2 -translate-y-1/2 bg-white text-black py-3 px-8 text-[2rem] rounded-full shadow-lg hover:bg-black hover:text-white cursor-custom transition-colors duration-200" />
 			<input
 				v-if="!isYesClicked"
 				id="no-button"
