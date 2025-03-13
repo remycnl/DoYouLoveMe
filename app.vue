@@ -40,13 +40,19 @@ function clickYesButton() {
 	isYesClicked.value = true;
 }
 
-function hoverNoButton() {
+function moveNoButton() {
 	const x = Math.random() * window.innerWidth;
 	const y = Math.random() * window.innerHeight;
 
 	const noButton = document.getElementById("no-button");
-	noButton.style.left = `${x}px`;
-	noButton.style.top = `${y}px`;
+	const duration = isDesktop.value ? 0.5 : 0.3;
+
+	gsap.to(noButton, {
+		left: `${x}px`,
+		top: `${y}px`,
+		duration: duration,
+		ease: "power2.out",
+	});
 }
 
 const applyElasticEffect = (elementName, easeEffect, duration) => {
@@ -58,15 +64,6 @@ const applyElasticEffect = (elementName, easeEffect, duration) => {
 			opacity: 1,
 			duration: duration,
 			ease: easeEffect,
-			onComplete: () => {
-				if (element.id === "no-button" || element.id === "yes-button") {
-					element.classList.add(
-						"transition-all",
-						"duration-300",
-						"ease-in-out"
-					);
-				}
-			},
 		});
 	} else {
 		console.warn(`Aucun élément trouvé avec id="${elementName}"`);
@@ -98,6 +95,7 @@ onMounted(() => {
 	});
 
 	setSEO();
+
 	if (isDesktop.value) {
 		setTimeout(() => {
 			applyElasticEffect("do-you-love-me", "elastic.out(1, 0.9)", 2);
@@ -108,11 +106,6 @@ onMounted(() => {
 		setTimeout(() => {
 			applyElasticEffect("no-button", "elastic.out(1, 0.3)", 1.5);
 		}, 6000);
-	} else {
-		const noButton = document.getElementById("no-button");
-		const yesButton = document.getElementById("yes-button");
-		noButton.classList.add("transition-all", "duration-300", "ease-in-out");
-		yesButton.classList.add("transition-all", "duration-300", "ease-in-out");
 	}
 });
 </script>
@@ -131,7 +124,7 @@ onMounted(() => {
 				<div
 					v-else
 					class="absolute top-10 lg:top-20 text-[4rem] lg:text-[8rem] text-black text-center">
-					<h1 class="lg:hidden">Do You Love Me?</h1>
+					<h1 class="lg:hidden">Do You<br />Love Me?</h1>
 					<span class="hidden lg:block">
 						<LetterByLetter :text="'Do You Love Me?'" />
 					</span>
@@ -159,13 +152,14 @@ onMounted(() => {
 				type="button"
 				value="YES"
 				@click="clickYesButton"
-				class="lg:scale-0 absolute left-[30%] lg:left-[40%] top-[80%] lg:top-[84%] font-mono font-bold -translate-x-1/2 -translate-y-1/2 bg-white text-black py-3 px-8 text-[2rem] rounded-full shadow-lg hover:bg-black hover:text-white cursor-custom" />
+				class="lg:scale-0 absolute left-[30%] lg:left-[40%] top-[80%] lg:top-[84%] font-mono font-bold -translate-x-1/2 -translate-y-1/2 bg-white text-black py-3 px-8 text-[2rem] rounded-full shadow-lg hover:bg-black hover:text-white cursor-custom transition-colors duration-300" />
 			<input
 				v-if="!isYesClicked"
 				id="no-button"
 				type="button"
 				value="NO"
-				@mouseover="hoverNoButton"
+				@click="isDesktop ? null : moveNoButton()"
+				@mouseover="isDesktop ? moveNoButton() : null"
 				class="lg:scale-0 absolute left-[70%] lg:left-[60%] top-[80%] lg:top-[84%] font-mono font-bold bg-black -translate-x-1/2 -translate-y-1/2 text-white py-3 px-10 text-[2rem] rounded-full shadow-lg cursor-custom" />
 		</div>
 	</section>
