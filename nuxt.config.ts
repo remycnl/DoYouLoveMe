@@ -12,6 +12,14 @@ export default defineNuxtConfig({
 		],
 	],
 	css: ["@/assets/global.css"],
+	nitro: {
+		prerender: {
+			routes: ["/"],
+			failOnError: false,
+		},
+		preset: "vercel",
+	},
+	ssr: true,
 	vite: {
 		plugins: [tailwindcss()],
 	},
