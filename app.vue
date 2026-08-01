@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { gsap } from "gsap";
 import { Transition } from "vue";
 import LetterByLetter from "./LetterByLetter.vue";
@@ -12,18 +12,15 @@ useHead({
 	meta: [
 		{ name: "description", content: "A simple love question" },
 		{ name: "viewport", content: "width=device-width, initial-scale=1" },
-
 		{ property: "og:title", content: "Do You Love Me? 🥺" },
 		{ property: "og:description", content: "A simple love question" },
 		{ property: "og:image", content: "/img/DoYouLoveMe.gif" },
 		{ property: "og:url", content: "https://doyouloveme.com" },
 		{ property: "og:type", content: "website" },
-
 		{ name: "twitter:card", content: "summary_large_image" },
 		{ name: "twitter:title", content: "Do You Love Me? 🥺" },
 		{ name: "twitter:description", content: "A simple love question" },
 		{ name: "twitter:image", content: "/img/DoYouLoveMe.gif" },
-
 		{ name: "author", content: "Rémy Canal" },
 		{ name: "robots", content: "index, follow" },
 	],
@@ -36,77 +33,219 @@ useHead({
 const isDesktop = ref(false);
 const isYesClicked = ref(false);
 
+const IMAGE_DELAY = 150;
+const TEXT_DELAY = 800;
+const YES_DELAY = 700;
+const NO_DELAY = 850;
+
+const AVOID_RADIUS = 110;
+const SAFE_MARGIN = 60;
+const MIN_JUMP_DISTANCE = 220;
+const REARM_RADIUS = AVOID_RADIUS * 1.8;
+const CURSOR_EXCLUSION_RADIUS = 150;
+const MAX_RETARGET_ATTEMPTS = 4;
+
+let isFleeing = false;
+const lastPointer = { x: null, y: null };
+
 function clickYesButton() {
 	isYesClicked.value = true;
 }
 
-function moveNoButton() {
-	const x = Math.random() * window.innerWidth;
-	const y = Math.random() * window.innerHeight;
+function pointInRect(px, py, x, y, width, height, padding = 0) {
+	return (
+		px >= x - padding &&
+		px <= x + width + padding &&
+		py >= y - padding &&
+		py <= y + height + padding
+	);
+}
 
+function moveNoButton(clientX = null, clientY = null, attempt = 0) {
 	const noButton = document.getElementById("no-button");
-	const duration = isDesktop.value ? 0.5 : 0.3;
+	if (!noButton) return;
+
+	const rect = noButton.getBoundingClientRect();
+	const duration = isDesktop.value ? 0.55 : 0.35;
+
+	const maxX = window.innerWidth - rect.width - SAFE_MARGIN * 2;
+	const maxY = window.innerHeight - rect.height - SAFE_MARGIN * 2;
+
+	let x,
+		y,
+		tries = 0;
+	let bestX = null,
+		bestY = null,
+		bestDist = -1;
+
+	do {
+		x = SAFE_MARGIN + Math.random() * maxX;
+		y = SAFE_MARGIN + Math.random() * maxY;
+		tries++;
+
+		if (clientX !== null) {
+			const centerDist = Math.hypot(
+				x + rect.width / 2 - clientX,
+				y + rect.height / 2 - clientY,
+			);
+			const overlapsCursor = pointInRect(
+				clientX,
+				clientY,
+				x,
+				y,
+				rect.width,
+				rect.height,
+				20,
+			);
+			const tooClose = centerDist < CURSOR_EXCLUSION_RADIUS;
+
+			if (overlapsCursor || tooClose) continue;
+
+			if (centerDist > bestDist) {
+				bestDist = centerDist;
+				bestX = x;
+				bestY = y;
+			}
+			if (centerDist >= MIN_JUMP_DISTANCE) break;
+		} else {
+			break;
+		}
+	} while (tries < 20);
+
+	if (clientX !== null && bestDist >= 0 && bestDist < MIN_JUMP_DISTANCE) {
+		x = bestX;
+		y = bestY;
+	}
+
+	isFleeing = true;
 
 	gsap.to(noButton, {
 		left: `${x}px`,
 		top: `${y}px`,
-		duration: duration,
+		duration,
 		ease: "power2.out",
+		onComplete: () => {
+			const newRect = noButton.getBoundingClientRect();
+			const mx = lastPointer.x;
+			const my = lastPointer.y;
+
+			if (
+				mx !== null &&
+				pointInRect(
+					mx,
+					my,
+					newRect.left,
+					newRect.top,
+					newRect.width,
+					newRect.height,
+					20,
+				) &&
+				attempt < MAX_RETARGET_ATTEMPTS
+			) {
+				moveNoButton(mx, my, attempt + 1);
+				return;
+			}
+
+			const centerX = newRect.left + newRect.width / 2;
+			const centerY = newRect.top + newRect.height / 2;
+			if (
+				mx === null ||
+				Math.hypot(mx - centerX, my - centerY) > REARM_RADIUS
+			) {
+				isFleeing = false;
+			}
+		},
 	});
 }
 
-const applyElasticEffect = (elementName, easeEffect, duration) => {
+function handlePointerMove(event) {
+	lastPointer.x = event.clientX;
+	lastPointer.y = event.clientY;
+
+	if (!isDesktop.value || isYesClicked.value) return;
+
+	const noButton = document.getElementById("no-button");
+	if (!noButton) return;
+
+	const rect = noButton.getBoundingClientRect();
+	const centerX = rect.left + rect.width / 2;
+	const centerY = rect.top + rect.height / 2;
+	const distance = Math.hypot(event.clientX - centerX, event.clientY - centerY);
+
+	if (distance < AVOID_RADIUS) {
+		if (isFleeing) return;
+		moveNoButton(event.clientX, event.clientY);
+	} else if (distance > REARM_RADIUS) {
+		isFleeing = false;
+	}
+}
+
+function applyElasticEffect(elementName, easeEffect, duration) {
 	const element = document.getElementById(elementName);
+	if (!element) return;
 
-	if (element) {
-		gsap.to(element, {
-			scale: 1,
-			opacity: 1,
-			duration: duration,
-			ease: easeEffect,
-		});
-	} else {
-		console.warn(`Aucun élément trouvé avec id="${elementName}"`);
-	}
-};
+	gsap.to(element, {
+		scale: 1,
+		opacity: 1,
+		duration,
+		ease: easeEffect,
+	});
+}
 
-const setSEO = () => {
-	if (import.meta.client) {
-		document.addEventListener("visibilitychange", function () {
-			if (document.visibilityState === "hidden") {
-				document.title = inactiveTitle.value;
-			} else {
-				document.title = activeTitle.value;
-			}
-		});
-	}
-};
+function applyImageEntrance(elementName, bounceEase, duration) {
+	const element = document.getElementById(elementName);
+	if (!element) return;
 
-onMounted(() => {
-	const updateWidth = () => {
-		isDesktop.value = window.innerWidth > 768;
-	};
-
-	updateWidth();
-	window.addEventListener("resize", updateWidth);
-
-	onBeforeUnmount(() => {
-		window.removeEventListener("resize", updateWidth);
+	gsap.to(element, {
+		opacity: 1,
+		duration: duration * 0.4,
+		ease: "power2.out",
 	});
 
-	setSEO();
+	gsap.to(element, {
+		scale: 1,
+		duration,
+		ease: bounceEase,
+	});
+}
+
+function handleVisibilityChange() {
+	document.title =
+		document.visibilityState === "hidden"
+			? inactiveTitle.value
+			: activeTitle.value;
+}
+
+function updateWidth() {
+	isDesktop.value = window.innerWidth > 768;
+}
+
+onMounted(() => {
+	updateWidth();
+	window.addEventListener("resize", updateWidth);
+	window.addEventListener("pointermove", handlePointerMove);
+	document.addEventListener("visibilitychange", handleVisibilityChange);
 
 	if (isDesktop.value) {
-		setTimeout(() => {
-			applyElasticEffect("do-you-love-me", "elastic.out(1, 0.9)", 2);
-		}, 2000);
-		setTimeout(() => {
-			applyElasticEffect("yes-button", "elastic.out(1, 0.3)", 1.5);
-		}, 5500);
-		setTimeout(() => {
-			applyElasticEffect("no-button", "elastic.out(1, 0.3)", 1.5);
-		}, 6000);
+		setTimeout(
+			() => applyImageEntrance("do-you-love-me", "elastic.out(1, 0.9)", 2),
+			IMAGE_DELAY,
+		);
+		setTimeout(
+			() => applyElasticEffect("yes-button", "elastic.out(1, 0.3)", 1.5),
+			YES_DELAY,
+		);
+		setTimeout(
+			() => applyElasticEffect("no-button", "elastic.out(1, 0.3)", 1.5),
+			NO_DELAY,
+		);
 	}
+});
+
+onUnmounted(() => {
+	window.removeEventListener("resize", updateWidth);
+	window.removeEventListener("pointermove", handlePointerMove);
+	document.removeEventListener("visibilitychange", handleVisibilityChange);
 });
 </script>
 
@@ -126,7 +265,9 @@ onMounted(() => {
 					class="absolute top-10 lg:top-20 text-[4rem] lg:text-[8rem] text-black text-center">
 					<h1 class="lg:hidden">Do You<br />Love Me?</h1>
 					<span class="hidden lg:block">
-						<LetterByLetter :text="'Do You Love Me?'" />
+						<LetterByLetter
+							:text="'Do You Love Me?'"
+							:start-delay="TEXT_DELAY" />
 					</span>
 				</div>
 			</Transition>
@@ -144,7 +285,7 @@ onMounted(() => {
 					id="do-you-love-me"
 					alt="CUTE GIF"
 					name="Do you love me?"
-					class="scale-[.65] lg:scale-[10]" />
+					class="scale-[.65] lg:scale-[1.6] lg:opacity-0" />
 			</Transition>
 			<input
 				v-if="!isYesClicked"
@@ -159,7 +300,6 @@ onMounted(() => {
 				type="button"
 				value="NO"
 				@click="isDesktop ? null : moveNoButton()"
-				@mouseover="isDesktop ? moveNoButton() : null"
 				class="lg:scale-0 absolute left-[70%] lg:left-[60%] top-[80%] lg:top-[84%] font-mono font-bold bg-black -translate-x-1/2 -translate-y-1/2 text-white py-3 px-10 text-[2rem] rounded-full shadow-lg cursor-custom" />
 		</div>
 	</section>
@@ -172,7 +312,9 @@ onMounted(() => {
 }
 
 body {
-	cursor: url("/img/cursor.png") 16 16, auto;
+	cursor:
+		url("/img/cursor.png") 16 16,
+		auto;
 }
 
 .fade-enter-active {

@@ -1,6 +1,6 @@
 # Preview
 
-https://do-you-love-me-olive.vercel.app/
+https://do-you-love-me-test.vercel.app/
 
 # Nuxt Minimal Starter
 

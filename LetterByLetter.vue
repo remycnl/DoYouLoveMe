@@ -6,6 +6,10 @@ const props = defineProps({
 		type: String,
 		required: true,
 	},
+	startDelay: {
+		type: Number,
+		default: 4000,
+	},
 });
 
 const splitText = computed(() => props.text.split(""));
@@ -15,7 +19,7 @@ const isActive = ref(false);
 onMounted(() => {
 	setTimeout(() => {
 		isActive.value = true;
-	}, 4000);
+	}, props.startDelay);
 });
 
 function getStyle(index) {
@@ -48,7 +52,9 @@ function getStyle(index) {
 	display: inline-block;
 	opacity: 0;
 	transform: translateX(30px) translateY(-30px) rotate(-10deg);
-	transition: opacity 0.3s ease, transform 0.3s ease;
+	transition:
+		opacity 0.3s ease,
+		transform 0.3s ease;
 }
 
 .letter.active {
