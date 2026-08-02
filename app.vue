@@ -26,32 +26,22 @@ const answerText = computed(() => {
 	return DEFAULT_ANSWER;
 });
 
-const isCustomQuestion = computed(
-	() => questionText.value !== DEFAULT_QUESTION,
-);
-
 const activeTitle = computed(() => `${questionText.value} 🥺`);
 const inactiveTitle = ref("COME BAAACK! 🥺");
-
-const shareDescription = computed(() =>
-	isCustomQuestion.value
-		? `${questionText.value} Tap to find out 🥺`
-		: "A simple question for a simple answer.",
-);
 
 useHead({
 	title: activeTitle,
 	meta: [
-		{ name: "description", content: shareDescription },
+		{ name: "description", content: "A simple question for a simple answer." },
 		{ name: "viewport", content: "width=device-width, initial-scale=1" },
-		{ property: "og:title", content: activeTitle },
-		{ property: "og:description", content: shareDescription },
+		{ property: "og:title", content: "Tap to find out! 😌" },
+		{ property: "og:description", content: "A simple question for a simple answer." },
 		{ property: "og:image", content: "/img/DoYouLoveMe.gif" },
 		{ property: "og:url", content: "https://do-you-love-me-test.vercel.app" },
 		{ property: "og:type", content: "website" },
 		{ name: "twitter:card", content: "summary_large_image" },
-		{ name: "twitter:title", content: activeTitle },
-		{ name: "twitter:description", content: shareDescription },
+		{ name: "twitter:title", content: "Tap to find out! 😌" },
+		{ name: "twitter:description", content: "A simple question for a simple answer." },
 		{ name: "twitter:image", content: "/img/DoYouLoveMe.gif" },
 		{ name: "author", content: "Rémy Canal" },
 		{ name: "robots", content: "index, follow" },

@@ -17,7 +17,6 @@ function fromBase64Url(value) {
 }
 
 export function encodeLinkPayload(question, answer) {
-	if (typeof window === "undefined") return "";
 	try {
 		const json = JSON.stringify({ q: question, a: answer });
 		const bytes = new TextEncoder().encode(json);
@@ -28,7 +27,6 @@ export function encodeLinkPayload(question, answer) {
 }
 
 export function decodeLinkPayload(encoded) {
-	if (typeof window === "undefined") return null;
 	if (!encoded || typeof encoded !== "string") return null;
 	try {
 		const bytes = fromBase64Url(encoded);
