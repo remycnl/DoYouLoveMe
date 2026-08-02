@@ -7,16 +7,12 @@ export default defineNuxtConfig({
 		[
 			"@nuxtjs/google-fonts",
 			{
-				families: { Allura: true },
+				families: { Allura: true, Inter: [400, 500, 600, 700] },
 			},
 		],
 	],
 	css: ["@/assets/global.css"],
 	nitro: {
-		prerender: {
-			routes: ["/"],
-			failOnError: false,
-		},
 		preset: "vercel",
 	},
 	ssr: true,

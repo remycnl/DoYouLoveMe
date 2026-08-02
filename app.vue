@@ -1,10 +1,26 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
 import { gsap } from "gsap";
-import { Transition } from "vue";
-import LetterByLetter from "./LetterByLetter.vue";
 
-const activeTitle = ref("Do You Love Me? 🥺");
+const route = useRoute();
+
+const DEFAULT_QUESTION = "Do You Love Me?";
+const DEFAULT_ANSWER = "Oooww...\nI Love You Too!";
+const MAX_Q_CHARS = 100;
+const MAX_A_CHARS = 200;
+
+const questionText = computed(() => {
+	const q = route.query.q;
+	if (typeof q === "string" && q.trim()) return q.slice(0, MAX_Q_CHARS);
+	return DEFAULT_QUESTION;
+});
+
+const answerText = computed(() => {
+	const a = route.query.a;
+	if (typeof a === "string" && a.trim()) return a.slice(0, MAX_A_CHARS);
+	return DEFAULT_ANSWER;
+});
+
+const activeTitle = computed(() => `${questionText.value} 🥺`);
 const inactiveTitle = ref("COME BAAACK! 🥺");
 
 useHead({
@@ -47,6 +63,37 @@ const MAX_RETARGET_ATTEMPTS = 4;
 
 let isFleeing = false;
 const lastPointer = { x: null, y: null };
+
+function longestLineLength(text) {
+	return Math.max(...text.split("\n").map((line) => line.length), 1);
+}
+
+function scaledFontSize(text, { min, max, base, baseChars, softness = 0.5 }) {
+	const len = longestLineLength(text);
+	if (len <= baseChars) return `${base}rem`;
+
+	const ratio = baseChars / len;
+	const size = base * Math.pow(ratio, softness);
+	return `${Math.min(max, Math.max(min, size)).toFixed(2)}rem`;
+}
+
+const questionFontSize = computed(() =>
+	scaledFontSize(
+		questionText.value,
+		isDesktop.value
+			? { min: 3.5, max: 8, base: 8, baseChars: 15, softness: 0.5 }
+			: { min: 2, max: 4, base: 4, baseChars: 12, softness: 0.5 },
+	),
+);
+
+const answerFontSize = computed(() =>
+	scaledFontSize(
+		answerText.value,
+		isDesktop.value
+			? { min: 3, max: 10, base: 10, baseChars: 16, softness: 0.5 }
+			: { min: 1.75, max: 4, base: 4, baseChars: 12, softness: 0.5 },
+	),
+);
 
 function clickYesButton() {
 	isYesClicked.value = true;
@@ -251,22 +298,24 @@ onUnmounted(() => {
 
 <template>
 	<section
-		class="fixed top-0 left-0 right-0 bottom-0 w-screen h-screen overflow-hidden bg-gradient-to-r from-primary via-secondary to-third">
+		class="fixed cursor-none top-0 left-0 right-0 bottom-0 w-screen h-screen overflow-hidden bg-linear-to-r from-primary via-secondary to-third">
 		<div
 			class="font-[Allura] w-full h-full flex flex-col items-center justify-center">
 			<Transition name="fade">
 				<h1
 					v-if="isYesClicked"
-					class="absolute top-10 lg:top-20 lg:right-60 text-[4rem] lg:text-[10rem] text-black text-left">
-					Oooww...<br />I Love You Too!
+					:style="{ fontSize: answerFontSize }"
+					class="absolute top-10 lg:top-20 lg:right-60 max-w-[92vw] lg:max-w-[45vw] whitespace-pre-line text-black text-left">
+					{{ answerText }}
 				</h1>
 				<div
 					v-else
-					class="absolute top-10 lg:top-20 text-[4rem] lg:text-[8rem] text-black text-center">
-					<h1 class="lg:hidden">Do You<br />Love Me?</h1>
+					:style="{ fontSize: questionFontSize }"
+					class="absolute top-10 lg:top-20 max-w-[92vw] lg:max-w-[70vw] whitespace-pre-line text-black text-center">
+					<h1 class="lg:hidden">{{ questionText }}</h1>
 					<span class="hidden lg:block">
 						<LetterByLetter
-							:text="'Do You Love Me?'"
+							:text="questionText"
 							:start-delay="TEXT_DELAY" />
 					</span>
 				</div>
@@ -293,28 +342,31 @@ onUnmounted(() => {
 				type="button"
 				value="YES"
 				@click="clickYesButton"
-				class="lg:scale-0 absolute left-[30%] lg:left-[40%] top-[80%] lg:top-[84%] font-mono font-bold -translate-x-1/2 -translate-y-1/2 bg-white text-black py-3 px-8 text-[2rem] rounded-full shadow-lg hover:bg-black hover:text-white cursor-custom transition-colors duration-200" />
+				class="lg:scale-0 absolute left-[30%] lg:left-[40%] top-[80%] lg:top-[84%] font-mono font-bold -translate-x-1/2 -translate-y-1/2 bg-white text-black py-3 px-8 text-[2rem] rounded-full shadow-lg hover:bg-black hover:text-white cursor-none transition-colors duration-200" />
 			<input
 				v-if="!isYesClicked"
 				id="no-button"
 				type="button"
 				value="NO"
 				@click="isDesktop ? null : moveNoButton()"
-				class="lg:scale-0 absolute left-[70%] lg:left-[60%] top-[80%] lg:top-[84%] font-mono font-bold bg-black -translate-x-1/2 -translate-y-1/2 text-white py-3 px-10 text-[2rem] rounded-full shadow-lg cursor-custom" />
+				class="lg:scale-0 absolute left-[70%] lg:left-[60%] top-[80%] lg:top-[84%] font-mono font-bold bg-black -translate-x-1/2 -translate-y-1/2 text-white py-3 px-10 text-[2rem] rounded-full shadow-lg cursor-none" />
 		</div>
+
+		<LoveCustomizer
+			:question-text="questionText"
+			:answer-text="answerText"
+			:default-question="DEFAULT_QUESTION"
+			:default-answer="DEFAULT_ANSWER"
+			:max-question-chars="MAX_Q_CHARS"
+			:max-answer-chars="MAX_A_CHARS" />
 	</section>
+	<CustomCursor />
 </template>
 
 <style>
 ::selection {
 	background: #febbcc;
 	color: #ffeecc;
-}
-
-body {
-	cursor:
-		url("/img/cursor.png") 16 16,
-		auto;
 }
 
 .fade-enter-active {

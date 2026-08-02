@@ -24,7 +24,7 @@ onMounted(() => {
 
 function getStyle(index) {
 	return {
-		transitionDelay: `${index * 0.08}s`,
+		transitionDelay: `${index * 0.05}s`,
 	};
 }
 </script>
