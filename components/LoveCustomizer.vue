@@ -156,7 +156,7 @@ onUnmounted(() => {
 				aria-labelledby="customize-title"
 				class="font-[Inter] w-full sm:w-104 bg-white/80 backdrop-blur-sm border-5 border-third text-black rounded-2xl shadow-2xl p-5">
 				<div class="flex items-center justify-between mb-3">
-					<h2 id="customize-title" class="text-sm font-bold tracking-wide">
+					<h2 id="customize-title" class="text-base font-bold tracking-wide">
 						Personnaliser les phrases
 					</h2>
 					<button
@@ -168,7 +168,7 @@ onUnmounted(() => {
 					</button>
 				</div>
 
-				<label class="block text-xs mb-1 text-black/60" for="question-input">
+				<label class="block text-sm mb-1 text-black/60" for="question-input">
 					Question
 				</label>
 				<textarea
@@ -177,12 +177,12 @@ onUnmounted(() => {
 					:maxlength="maxQuestionChars"
 					:placeholder="defaultQuestion"
 					rows="3"
-					class="scrollbar-subtle w-full resize-none rounded-lg border border-black/10 bg-primary/40 px-3 py-2 text-sm mb-1 focus:outline-none focus:ring-2 focus:ring-third"></textarea>
+					class="scrollbar-subtle w-full resize-none rounded-lg border border-black/10 bg-primary/40 px-3 py-2 text-base mb-1 focus:outline-none focus:ring-2 focus:ring-third"></textarea>
 				<p class="text-[10px] text-black/40 mb-3 text-right">
 					{{ customQuestion.length }}/{{ maxQuestionChars }}
 				</p>
 
-				<label class="block text-xs mb-1 text-black/60" for="answer-input">
+				<label class="block text-sm mb-1 text-black/60" for="answer-input">
 					Réponse (affichée après le OUI)
 				</label>
 				<textarea
@@ -191,7 +191,7 @@ onUnmounted(() => {
 					:maxlength="maxAnswerChars"
 					:placeholder="defaultAnswer"
 					rows="5"
-					class="scrollbar-subtle w-full resize-none rounded-lg border border-black/10 bg-primary/40 px-3 py-2 text-sm mb-1 focus:outline-none focus:ring-2 focus:ring-third"></textarea>
+					class="scrollbar-subtle w-full resize-none rounded-lg border border-black/10 bg-primary/40 px-3 py-2 text-base mb-1 focus:outline-none focus:ring-2 focus:ring-third"></textarea>
 				<p class="text-[10px] text-black/40 mb-4 text-right">
 					{{ customAnswer.length }}/{{ maxAnswerChars }}
 				</p>
@@ -200,13 +200,13 @@ onUnmounted(() => {
 					<button
 						type="button"
 						@click="applyToPage"
-						class="flex-1 cursor-pointer! bg-third text-black text-sm font-bold py-2 rounded-full hover:bg-third/70 active:scale-95 transition-all duration-200">
+						class="flex-1 cursor-pointer! bg-third text-black text-base font-bold py-2 rounded-full hover:bg-third/70 active:scale-95 transition-all duration-200">
 						{{ isApplied ? "Appliqué !" : "Appliquer ici" }}
 					</button>
 					<button
 						type="button"
 						@click="generateLink"
-						class="flex-1 cursor-pointer! bg-black text-white text-sm font-bold py-2 rounded-full hover:bg-black/80 active:scale-95 transition-all duration-200">
+						class="flex-1 cursor-pointer! bg-black text-white text-base font-bold py-2 rounded-full hover:bg-black/80 active:scale-95 transition-all duration-200">
 						Générer le lien
 					</button>
 				</div>
@@ -219,12 +219,12 @@ onUnmounted(() => {
 						type="text"
 						readonly
 						:value="generatedLink"
-						class="flex-1 text-xs bg-black/5 rounded-lg px-2 py-2 truncate"
+						class="flex-1 text-sm bg-black/5 rounded-lg px-2 py-2 truncate"
 						@focus="$event.target.select()" />
 					<button
 						type="button"
 						@click="copyLink"
-						class="shrink-0 cursor-pointer! text-xs font-bold bg-third text-black px-3 py-2 rounded-lg hover:bg-third/70 active:scale-95 transition-all duration-200">
+						class="shrink-0 cursor-pointer! text-sm font-bold bg-third text-black px-3 py-2 rounded-lg hover:bg-third/70 active:scale-95 transition-all duration-200">
 						{{ isCopied ? "Copié !" : "Copier" }}
 					</button>
 				</div>

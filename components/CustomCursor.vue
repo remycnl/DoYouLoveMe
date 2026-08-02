@@ -18,18 +18,32 @@ let targetRotation = 0;
 let currentRotation = 0;
 let raf = null;
 
+const isDesktop = ref(false);
+
+function updateDevice() {
+	isDesktop.value = window.matchMedia(
+		"(hover: hover) and (pointer: fine)",
+	).matches;
+}
+
 function handlePointerMove(event) {
+	if (!isDesktop.value) return;
+
 	targetX = event.clientX;
 	targetY = event.clientY;
+
 	if (!isVisible.value) isVisible.value = true;
 
 	const isOverClickable =
 		event.target instanceof Element &&
 		!!event.target.closest(CLICKABLE_SELECTOR);
+
 	targetRotation = isOverClickable ? HOVER_TILT_DEG : 0;
 }
 
 function handlePointerLeave() {
+	if (!isDesktop.value) return;
+
 	isVisible.value = false;
 }
 
@@ -44,20 +58,30 @@ function tick() {
 }
 
 onMounted(() => {
+	updateDevice();
+
+	window.addEventListener("resize", updateDevice);
 	window.addEventListener("pointermove", handlePointerMove);
 	document.documentElement.addEventListener("mouseleave", handlePointerLeave);
+
 	raf = requestAnimationFrame(tick);
 });
 
 onUnmounted(() => {
+	window.removeEventListener("resize", updateDevice);
 	window.removeEventListener("pointermove", handlePointerMove);
-	document.documentElement.removeEventListener("mouseleave", handlePointerLeave);
+	document.documentElement.removeEventListener(
+		"mouseleave",
+		handlePointerLeave,
+	);
+
 	if (raf) cancelAnimationFrame(raf);
 });
 </script>
 
 <template>
 	<img
+		v-if="isDesktop"
 		src="/img/cursor.png"
 		alt=""
 		aria-hidden="true"
@@ -90,12 +114,16 @@ body.native-cursor .custom-cursor {
 	opacity: 0 !important;
 }
 
-body {
-	cursor: none;
+@media (hover: hover) and (pointer: fine) {
+	body {
+		cursor: none;
+	}
 }
 
-body.native-cursor,
-body.native-cursor * {
-	cursor: auto !important;
+@media (hover: hover) and (pointer: fine) {
+	body.native-cursor,
+	body.native-cursor * {
+		cursor: auto !important;
+	}
 }
 </style>
