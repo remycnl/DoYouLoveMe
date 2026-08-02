@@ -98,7 +98,7 @@ function playButtonEntrance() {
 		scale: 1,
 		opacity: 1,
 		duration: 1.5,
-		ease: "elastic.out(1, 0.3)",
+		ease: "elastic.out(1, 0.5)",
 	});
 }
 
