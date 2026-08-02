@@ -26,23 +26,22 @@ const inactiveTitle = ref("COME BAAACK! 🥺");
 useHead({
 	title: activeTitle,
 	meta: [
-		{ name: "description", content: "A simple love question" },
+		{ name: "description", content: "A simple question of love" },
 		{ name: "viewport", content: "width=device-width, initial-scale=1" },
 		{ property: "og:title", content: "Do You Love Me? 🥺" },
-		{ property: "og:description", content: "A simple love question" },
+		{ property: "og:description", content: "A simple question of love" },
 		{ property: "og:image", content: "/img/DoYouLoveMe.gif" },
-		{ property: "og:url", content: "https://doyouloveme.com" },
+		{ property: "og:url", content: "https://do-you-love-me-test.vercel.app" },
 		{ property: "og:type", content: "website" },
 		{ name: "twitter:card", content: "summary_large_image" },
 		{ name: "twitter:title", content: "Do You Love Me? 🥺" },
-		{ name: "twitter:description", content: "A simple love question" },
+		{ name: "twitter:description", content: "A simple question of love" },
 		{ name: "twitter:image", content: "/img/DoYouLoveMe.gif" },
 		{ name: "author", content: "Rémy Canal" },
 		{ name: "robots", content: "index, follow" },
 	],
 	link: [
-		{ rel: "icon", type: "image/png", href: "/favicon.png" },
-		{ rel: "canonical", href: "https://doyouloveme.com" },
+		{ rel: "canonical", href: "https://do-you-love-me-test.vercel.app" },
 	],
 });
 
