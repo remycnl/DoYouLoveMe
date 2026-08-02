@@ -8,14 +8,20 @@ const DEFAULT_ANSWER = "Oooww...\nI Love You Too!";
 const MAX_Q_CHARS = 100;
 const MAX_A_CHARS = 200;
 
+const decodedPayload = computed(() => {
+	const d = route.query.d;
+	if (typeof d !== "string") return null;
+	return decodeLinkPayload(d);
+});
+
 const questionText = computed(() => {
-	const q = route.query.q;
+	const q = decodedPayload.value?.q;
 	if (typeof q === "string" && q.trim()) return q.slice(0, MAX_Q_CHARS);
 	return DEFAULT_QUESTION;
 });
 
 const answerText = computed(() => {
-	const a = route.query.a;
+	const a = decodedPayload.value?.a;
 	if (typeof a === "string" && a.trim()) return a.slice(0, MAX_A_CHARS);
 	return DEFAULT_ANSWER;
 });
@@ -40,9 +46,7 @@ useHead({
 		{ name: "author", content: "Rémy Canal" },
 		{ name: "robots", content: "index, follow" },
 	],
-	link: [
-		{ rel: "canonical", href: "https://do-you-love-me-test.vercel.app" },
-	],
+	link: [{ rel: "canonical", href: "https://do-you-love-me-test.vercel.app" }],
 });
 
 const isDesktop = ref(false);
@@ -318,9 +322,7 @@ onUnmounted(() => {
 					class="absolute top-10 lg:top-20 max-w-[92vw] lg:max-w-[70vw] whitespace-pre-line text-black text-center">
 					<h1 class="lg:hidden">{{ questionText }}</h1>
 					<span class="hidden lg:block">
-						<LetterByLetter
-							:text="questionText"
-							:start-delay="TEXT_DELAY" />
+						<LetterByLetter :text="questionText" :start-delay="TEXT_DELAY" />
 					</span>
 				</div>
 			</Transition>

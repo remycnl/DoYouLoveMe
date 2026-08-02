@@ -16,7 +16,10 @@ const route = useRoute();
 
 const BUTTON_ENTRANCE_DELAY = 1000;
 const HIDE_BUTTON_PARAM = "hb";
-const OWNER_STORAGE_KEY = "adlm-customizer-owner";
+const DATA_PARAM = "d";
+const OWNED_LINKS_KEY = "adlm-customizer-owned-links";
+const MAX_OWNED_LINKS = 50;
+const SIGNATURE_SEPARATOR = "\u0001";
 
 const isPanelOpen = ref(false);
 const customQuestion = ref("");
@@ -26,36 +29,61 @@ const generatedLink = ref("");
 const isCopied = ref(false);
 const isApplied = ref(false);
 
-const isOwner = ref(false);
+const ownedSignatures = ref([]);
 
-function readOwnerFlag() {
-	if (typeof window === "undefined") return false;
+function buildSignature(question, answer) {
+	return `${question}${SIGNATURE_SEPARATOR}${answer}`;
+}
+
+function readOwnedSignatures() {
+	if (typeof window === "undefined") return [];
 	try {
-		return window.localStorage.getItem(OWNER_STORAGE_KEY) === "1";
+		const raw = window.localStorage.getItem(OWNED_LINKS_KEY);
+		const parsed = raw ? JSON.parse(raw) : [];
+		return Array.isArray(parsed) ? parsed : [];
 	} catch (e) {
 		// localStorage unavailable (private mode, blocked storage, etc.)
-		return false;
+		return [];
 	}
 }
 
-function markAsOwner() {
-	if (isOwner.value) return;
-	isOwner.value = true;
+function persistOwnedSignatures(list) {
 	if (typeof window === "undefined") return;
 	try {
-		window.localStorage.setItem(OWNER_STORAGE_KEY, "1");
+		window.localStorage.setItem(OWNED_LINKS_KEY, JSON.stringify(list));
 	} catch (e) {
-		// storage write failed, isOwner still holds for the current session
+		// storage write failed, ownership still holds for the current session
 	}
 }
 
+function markSignatureAsOwned(question, answer) {
+	const signature = buildSignature(question, answer);
+	if (ownedSignatures.value.includes(signature)) return;
+	const updated = [...ownedSignatures.value, signature].slice(-MAX_OWNED_LINKS);
+	ownedSignatures.value = updated;
+	persistOwnedSignatures(updated);
+}
+
+function resolveQuestion(q) {
+	return q || props.defaultQuestion;
+}
+function resolveAnswer(a) {
+	return a || props.defaultAnswer;
+}
+
+const currentSignature = computed(() =>
+	buildSignature(props.questionText, props.answerText),
+);
+
+const isOwnerOfCurrentLink = computed(() =>
+	ownedSignatures.value.includes(currentSignature.value),
+);
+
 const isButtonHidden = computed(
-	() => route.query[HIDE_BUTTON_PARAM] === "1" && !isOwner.value,
+	() => route.query[HIDE_BUTTON_PARAM] === "1" && !isOwnerOfCurrentLink.value,
 );
 
 function openPanel() {
-	markAsOwner();
-
 	customQuestion.value =
 		props.questionText === props.defaultQuestion ? "" : props.questionText;
 	customAnswer.value =
@@ -85,8 +113,11 @@ function buildQuery() {
 function generateLink() {
 	const { q, a, hb } = buildQuery();
 	const params = new URLSearchParams();
-	if (q) params.set("q", q);
-	if (a) params.set("a", a);
+
+	if (q || a) {
+		const payload = encodeLinkPayload(q, a);
+		if (payload) params.set(DATA_PARAM, payload);
+	}
 	if (hb) params.set(HIDE_BUTTON_PARAM, hb);
 
 	const base = `${window.location.origin}${window.location.pathname}`;
@@ -94,6 +125,8 @@ function generateLink() {
 		? `${base}?${params.toString()}`
 		: base;
 	isCopied.value = false;
+
+	if (hb) markSignatureAsOwned(resolveQuestion(q), resolveAnswer(a));
 }
 
 async function copyLink() {
@@ -111,14 +144,18 @@ function applyToPage() {
 	const { q, a, hb } = buildQuery();
 	const query = { ...router.currentRoute.value.query };
 
-	if (q) query.q = q;
-	else delete query.q;
-
-	if (a) query.a = a;
-	else delete query.a;
+	if (q || a) {
+		const payload = encodeLinkPayload(q, a);
+		if (payload) query[DATA_PARAM] = payload;
+		else delete query[DATA_PARAM];
+	} else {
+		delete query[DATA_PARAM];
+	}
 
 	if (hb) query[HIDE_BUTTON_PARAM] = hb;
 	else delete query[HIDE_BUTTON_PARAM];
+
+	if (hb) markSignatureAsOwned(resolveQuestion(q), resolveAnswer(a));
 
 	router.replace({ query });
 	isApplied.value = true;
@@ -148,7 +185,7 @@ function playButtonEntrance() {
 onMounted(() => {
 	window.addEventListener("keydown", handleKeydown);
 
-	isOwner.value = readOwnerFlag();
+	ownedSignatures.value = readOwnedSignatures();
 
 	if (!isButtonHidden.value && window.innerWidth > 768) {
 		setTimeout(playButtonEntrance, BUTTON_ENTRANCE_DELAY);
@@ -269,8 +306,9 @@ onUnmounted(() => {
 				<p
 					v-if="hideButtonOnLink"
 					class="text-[10px] text-black/40 mb-4 leading-snug">
-					You'll still see this button on this device — it only disappears for
-					people opening the link elsewhere.
+					You'll still see this button on this device when you open this exact
+					link — it stays hidden for any other visitor, and for other custom
+					links you haven't generated yourself.
 				</p>
 				<p v-else class="mb-4"></p>
 
