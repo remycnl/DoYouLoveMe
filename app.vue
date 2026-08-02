@@ -107,6 +107,11 @@ function pointInRect(px, py, x, y, width, height, padding = 0) {
 	);
 }
 
+function isCustomizePanelOpen() {
+	if (typeof document === "undefined") return false;
+	return document.body.classList.contains("native-cursor");
+}
+
 function moveNoButton(clientX = null, clientY = null, attempt = 0) {
 	const noButton = document.getElementById("no-button");
 	if (!noButton) return;
@@ -208,7 +213,7 @@ function handlePointerMove(event) {
 	lastPointer.x = event.clientX;
 	lastPointer.y = event.clientY;
 
-	if (!isDesktop.value || isYesClicked.value) return;
+	if (!isDesktop.value || isYesClicked.value || isCustomizePanelOpen()) return;
 
 	const noButton = document.getElementById("no-button");
 	if (!noButton) return;

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { gsap } from "gsap";
 
 const props = defineProps({
@@ -12,21 +12,55 @@ const props = defineProps({
 });
 
 const router = useRouter();
+const route = useRoute();
 
 const BUTTON_ENTRANCE_DELAY = 1000;
+const HIDE_BUTTON_PARAM = "hb";
+const OWNER_STORAGE_KEY = "adlm-customizer-owner";
 
 const isPanelOpen = ref(false);
 const customQuestion = ref("");
 const customAnswer = ref("");
+const hideButtonOnLink = ref(false);
 const generatedLink = ref("");
 const isCopied = ref(false);
 const isApplied = ref(false);
 
+const isOwner = ref(false);
+
+function readOwnerFlag() {
+	if (typeof window === "undefined") return false;
+	try {
+		return window.localStorage.getItem(OWNER_STORAGE_KEY) === "1";
+	} catch (e) {
+		// localStorage unavailable (private mode, blocked storage, etc.)
+		return false;
+	}
+}
+
+function markAsOwner() {
+	if (isOwner.value) return;
+	isOwner.value = true;
+	if (typeof window === "undefined") return;
+	try {
+		window.localStorage.setItem(OWNER_STORAGE_KEY, "1");
+	} catch (e) {
+		// storage write failed, isOwner still holds for the current session
+	}
+}
+
+const isButtonHidden = computed(
+	() => route.query[HIDE_BUTTON_PARAM] === "1" && !isOwner.value,
+);
+
 function openPanel() {
+	markAsOwner();
+
 	customQuestion.value =
 		props.questionText === props.defaultQuestion ? "" : props.questionText;
 	customAnswer.value =
 		props.answerText === props.defaultAnswer ? "" : props.answerText;
+	hideButtonOnLink.value = route.query[HIDE_BUTTON_PARAM] === "1";
 	generatedLink.value = "";
 	isCopied.value = false;
 	isApplied.value = false;
@@ -37,17 +71,23 @@ function closePanel() {
 	isPanelOpen.value = false;
 }
 
+function toggleHideButton() {
+	hideButtonOnLink.value = !hideButtonOnLink.value;
+}
+
 function buildQuery() {
 	const q = customQuestion.value.trim().slice(0, props.maxQuestionChars);
 	const a = customAnswer.value.trim().slice(0, props.maxAnswerChars);
-	return { q, a };
+	const hb = hideButtonOnLink.value ? "1" : "";
+	return { q, a, hb };
 }
 
 function generateLink() {
-	const { q, a } = buildQuery();
+	const { q, a, hb } = buildQuery();
 	const params = new URLSearchParams();
 	if (q) params.set("q", q);
 	if (a) params.set("a", a);
+	if (hb) params.set(HIDE_BUTTON_PARAM, hb);
 
 	const base = `${window.location.origin}${window.location.pathname}`;
 	generatedLink.value = params.toString()
@@ -63,12 +103,12 @@ async function copyLink() {
 		isCopied.value = true;
 		setTimeout(() => (isCopied.value = false), 2000);
 	} catch (e) {
-		// clipboard indisponible, l'utilisateur peut sélectionner manuellement
+		// clipboard unavailable, user can still select the text manually
 	}
 }
 
 function applyToPage() {
-	const { q, a } = buildQuery();
+	const { q, a, hb } = buildQuery();
 	const query = { ...router.currentRoute.value.query };
 
 	if (q) query.q = q;
@@ -76,6 +116,9 @@ function applyToPage() {
 
 	if (a) query.a = a;
 	else delete query.a;
+
+	if (hb) query[HIDE_BUTTON_PARAM] = hb;
+	else delete query[HIDE_BUTTON_PARAM];
 
 	router.replace({ query });
 	isApplied.value = true;
@@ -104,7 +147,10 @@ function playButtonEntrance() {
 
 onMounted(() => {
 	window.addEventListener("keydown", handleKeydown);
-	if (window.innerWidth > 768) {
+
+	isOwner.value = readOwnerFlag();
+
+	if (!isButtonHidden.value && window.innerWidth > 768) {
 		setTimeout(playButtonEntrance, BUTTON_ENTRANCE_DELAY);
 	}
 });
@@ -116,7 +162,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-	<div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40">
+	<div
+		v-if="!isButtonHidden"
+		class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40">
 		<div id="customize-button-entrance" class="lg:scale-0 lg:opacity-0">
 			<button
 				id="customize-button"
@@ -138,7 +186,7 @@ onUnmounted(() => {
 					<path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
 				</svg>
 				<span class="text-xs font-mono font-semibold tracking-wide"
-					>personnaliser</span
+					>customize</span
 				>
 			</button>
 		</div>
@@ -157,12 +205,12 @@ onUnmounted(() => {
 				class="font-[Inter] w-full sm:w-104 bg-white/80 backdrop-blur-sm border-5 border-third text-black rounded-2xl shadow-2xl p-5">
 				<div class="flex items-center justify-between mb-3">
 					<h2 id="customize-title" class="text-base font-bold tracking-wide">
-						Personnaliser les phrases
+						Customize the phrases
 					</h2>
 					<button
 						type="button"
 						@click="closePanel"
-						aria-label="Fermer"
+						aria-label="Close"
 						class="cursor-pointer! text-black/50 hover:text-black transition-colors text-lg leading-none">
 						✕
 					</button>
@@ -183,7 +231,7 @@ onUnmounted(() => {
 				</p>
 
 				<label class="block text-sm mb-1 text-black/60" for="answer-input">
-					Réponse (affichée après le OUI)
+					Answer (shown after YES)
 				</label>
 				<textarea
 					id="answer-input"
@@ -196,18 +244,48 @@ onUnmounted(() => {
 					{{ customAnswer.length }}/{{ maxAnswerChars }}
 				</p>
 
+				<div class="flex items-center justify-between gap-3 mb-1">
+					<span
+						id="hide-button-label"
+						class="text-sm text-black/70 leading-snug">
+						Hide the "customize" button for whoever opens this link
+					</span>
+					<button
+						id="hide-button-toggle"
+						type="button"
+						role="switch"
+						:aria-checked="hideButtonOnLink"
+						aria-labelledby="hide-button-label"
+						@click="toggleHideButton"
+						class="cursor-pointer! relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200"
+						:class="hideButtonOnLink ? 'bg-third' : 'bg-black/15'">
+						<span
+							class="inline-block h-4 w-4 cursor-pointer! transform rounded-full bg-white shadow-sm transition-transform duration-200"
+							:class="
+								hideButtonOnLink ? 'translate-x-6' : 'translate-x-1'
+							"></span>
+					</button>
+				</div>
+				<p
+					v-if="hideButtonOnLink"
+					class="text-[10px] text-black/40 mb-4 leading-snug">
+					You'll still see this button on this device — it only disappears for
+					people opening the link elsewhere.
+				</p>
+				<p v-else class="mb-4"></p>
+
 				<div class="flex gap-2">
 					<button
 						type="button"
 						@click="applyToPage"
 						class="flex-1 cursor-pointer! bg-third text-black text-base font-bold py-2 rounded-full hover:bg-third/70 active:scale-95 transition-all duration-200">
-						{{ isApplied ? "Appliqué !" : "Appliquer ici" }}
+						{{ isApplied ? "Applied!" : "Apply here" }}
 					</button>
 					<button
 						type="button"
 						@click="generateLink"
 						class="flex-1 cursor-pointer! bg-black text-white text-base font-bold py-2 rounded-full hover:bg-black/80 active:scale-95 transition-all duration-200">
-						Générer le lien
+						Generate link
 					</button>
 				</div>
 
@@ -225,7 +303,7 @@ onUnmounted(() => {
 						type="button"
 						@click="copyLink"
 						class="shrink-0 cursor-pointer! text-sm font-bold bg-third text-black px-3 py-2 rounded-lg hover:bg-third/70 active:scale-95 transition-all duration-200">
-						{{ isCopied ? "Copié !" : "Copier" }}
+						{{ isCopied ? "Copied!" : "Copy" }}
 					</button>
 				</div>
 			</div>
