@@ -239,7 +239,7 @@ onUnmounted(() => {
 				role="dialog"
 				aria-modal="true"
 				aria-labelledby="customize-title"
-				class="font-[Inter] w-full sm:w-104 bg-white/80 backdrop-blur-sm border-5 border-third text-black rounded-2xl shadow-2xl p-5">
+				class="font-[Inter] w-full scrollbar-subtle max-h-[95lvh] overflow-x-hidden overflow-y-auto sm:w-104 bg-white/80 backdrop-blur-xs border-8 border-third text-black rounded-2xl shadow-2xl p-5">
 				<div class="flex items-center justify-between mb-3">
 					<h2 id="customize-title" class="text-base font-bold tracking-wide">
 						Customize the phrases
